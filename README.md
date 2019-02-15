@@ -4,10 +4,11 @@ An Ethereum Plugin for the [Pocket iOS SDK](https://github.com/pokt-network/pock
 # Install 
 Need to install the following pod in your Podfile:
 
-`pod 'SwiftKeychainWrapper', :git => 'git@github.com:jrendel/SwiftKeychainWrapper.git', :branch => 'develop', :commit => '77f73c354d695d976bcf1437fc9fbcea981aa2b4'`
+`pod 'Pocket', :git => 'https://github.com/pokt-network/pocket-ios-sdk.git', :branch => 'master'`
 
-`pod 'Pocket', :git => 'https://github.com/pokt-network/pocket-ios-eth.git', :branch => 'master'`
+`pod 'PocketEth', :git => 'https://github.com/pokt-network/pocket-ios-eth.git', :branch => 'master'`
 
+`pod 'SwiftKeychainWrapper', :git => 'https://github.com/jrendel/SwiftKeychainWrapper.git', :branch => 'develop', :commit => '77f73c354d695d976bcf1437fc9fbcea981aa2b4'`
 
 # Before hand
 Pocket Network offers a node running in Rinkeby for testing.
@@ -25,6 +26,8 @@ To easily set it up:
             return URL.init(string: "https://ethereum.pokt.network")!
         }
     }`
+    
+4- After we specified the URL, we need to set the configuration for Pocket in the `Application` function: `Pocket.shared.setConfiguration(config: self)`
 
 # Subnetwork
 Currently the Pocket team is offering the `https://ethereum.pokt.network` endpoint, which supports both Mainnet and the Rinkeby testnet with the following `subnetwork` identifiers:
@@ -34,26 +37,31 @@ Currently the Pocket team is offering the `https://ethereum.pokt.network` endpoi
 
 # Functionality
 
-## Creating a Wallet
-
-`public static func createWallet(subnetwork: String, data: [AnyHashable : Any]?) throws -> Wallet`
+## Creating and Importing a Wallet
 
 The wallet creation primarily uses the web3 library and the `SECP256k1.generatePrivateKey` function and saves to the keystore on the device. Developers do not have to worry about encrypting, storing or retrieving the wallet from the device.
 
-Example from [BANANO Quest](https://github.com/pokt-network/banano-quest):
+Follow the following example to create an Ethereum Wallet:
+
+` let newWallet = try PocketEth.createWallet(subnetwork: "4", data: nil)`
+
+And to import, you need to define:
+
+1- Public Key
+
+2- Private Key
+
+3- Subnetwork
+
+4- Data
 
 ```
-let wallet = try PocketEth.createWallet(subnetwork: subnetwork, data: nil)
-if try wallet.save(passphrase: walletPassphrase) == false {
-    throw PlayerPersistenceError.walletCreationError
-}
+let privateKey = "0x";
+let address = "0x";
+let subnetwork = "32";
+
+let importWallet = try PocketEth.importWallet(privateKey: privateKey, subnetwork: "4", address: address, data: nil) 
 ```
-
-## Importing a Wallet
-
-`public static func importWallet(subnetwork: String, privateKey: String, address: String?, data: [AnyHashable : Any]?) throws -> Wallet`
-
-To import a wallet, the user must pass in their plaintext private key. 
 
 ## Creating a Transaction
 
@@ -61,12 +69,17 @@ To import a wallet, the user must pass in their plaintext private key.
 
 To create an Ethereum transaction you need the following parameters:
 
-- `nonce`: A counter that increments by +1 each time a transaction is created on an account. You can retrieve the current transaction count using `eth_getTransactionCount` Query
-- `gasPrice`: The price of the transaction denominated in wei
-- `gasLimit`: Max amount of gas to be used for transaction denominated in wei
-- `to`: Public address receiving the transaction
-- `value` (optional): Amount of ETH being sent in the transaction
-- `data` (optional): Data such as ABI of the function being called on a smart contract can be sent through the data field
+1- `nonce`: A counter that increments by +1 each time a transaction is created on an account. You can retrieve the current transaction count using `eth_getTransactionCount` (Query)
+
+2- `gasPrice`: The price of the transaction denominated in wei
+
+3- `gasLimit`: Max amount of gas to be used for transaction denominated in wei
+
+4- `to`: Public address receiving the transaction
+
+5- `value` (optional): Amount of ETH being sent in the transaction
+
+6- `data` (optional): Data such as ABI of the function being called on a smart contract can be sent through the data field
 
 By passing these in through the `params` dictionary the Ethereum plugin abstracts all the difficulty of creating transactions for the developer by returning a simple `Transaction` object. An example transaction in creating a Quest in BANANO Quest:
 
